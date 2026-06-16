@@ -1,5 +1,4 @@
-import { useState, useMemo } from "react";
-import { questions, type Difficulty } from "./data/questions";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield,
@@ -11,13 +10,30 @@ import {
   Lock,
   AlertTriangle,
   ArrowRight,
+  Shuffle,
 } from "lucide-react";
+import { questions, type Difficulty, type Question } from "./data/questions";
 
 type Phase = "intro" | "difficulty" | "quiz" | "result";
 
+const QUIZ_SIZE = 15;
+
+function pickRandom(pool: Question[], count: number): Question[] {
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, pool.length));
+}
+
 const DIFFICULTY_CONFIG: Record<
   Difficulty,
-  { label: string; icon: string; color: string; borderColor: string; bgColor: string; description: string; tag: string }
+  {
+    label: string;
+    icon: string;
+    color: string;
+    borderColor: string;
+    bgColor: string;
+    description: string;
+    count: number;
+  }
 > = {
   beginner: {
     label: "مبتدئ",
@@ -26,7 +42,7 @@ const DIFFICULTY_CONFIG: Record<
     borderColor: "border-emerald-500/40",
     bgColor: "bg-emerald-500/10",
     description: "أساسيات الأمن الرقمي — مثالي للبدء",
-    tag: "9 أسئلة",
+    count: questions.filter((q) => q.difficulty === "beginner").length,
   },
   intermediate: {
     label: "متوسط",
@@ -35,7 +51,7 @@ const DIFFICULTY_CONFIG: Record<
     borderColor: "border-yellow-500/40",
     bgColor: "bg-yellow-500/10",
     description: "هجمات معروفة وأساليب حماية أعمق",
-    tag: "9 أسئلة",
+    count: questions.filter((q) => q.difficulty === "intermediate").length,
   },
   advanced: {
     label: "متقدم",
@@ -44,9 +60,11 @@ const DIFFICULTY_CONFIG: Record<
     borderColor: "border-rose-500/40",
     bgColor: "bg-rose-500/10",
     description: "تقنيات هجوم متقدمة ومفاهيم احترافية",
-    tag: "9 أسئلة",
+    count: questions.filter((q) => q.difficulty === "advanced").length,
   },
 };
+
+// ─── Sub-components ────────────────────────────────────────────────────────
 
 function ProgressBar({ current, total }: { current: number; total: number }) {
   const pct = (current / total) * 100;
@@ -79,6 +97,19 @@ function CategoryBadge({ category }: { category: string }) {
   );
 }
 
+function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
+  const cfg = DIFFICULTY_CONFIG[difficulty];
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${cfg.borderColor} ${cfg.color}`}
+    >
+      {cfg.icon} {cfg.label}
+    </span>
+  );
+}
+
+// ─── Screens ───────────────────────────────────────────────────────────────
+
 function IntroScreen({ onNext }: { onNext: () => void }) {
   return (
     <motion.div
@@ -108,7 +139,7 @@ function IntroScreen({ onNext }: { onNext: () => void }) {
 
       <div className="grid grid-cols-3 gap-4 w-full max-w-sm">
         {[
-          { icon: "❓", label: "27 سؤالاً" },
+          { icon: "🎲", label: "15 سؤالاً عشوائيًا" },
           { icon: "🏷️", label: "3 مستويات" },
           { icon: "📖", label: "شرح تفصيلي" },
         ].map((item) => (
@@ -122,12 +153,14 @@ function IntroScreen({ onNext }: { onNext: () => void }) {
         ))}
       </div>
 
-      <div className="bg-cyber-surface border border-cyber-border rounded-xl p-4 w-full max-w-sm text-right">
-        <p className="text-xs text-cyber-muted leading-relaxed">
-          <span className="text-cyber-cyan font-medium">المواضيع المشمولة: </span>
-          كلمات المرور · التصيّد الاحتيالي · البرامج الخبيثة · التصفح الآمن ·
-          الهندسة الاجتماعية
-        </p>
+      <div className="bg-cyber-surface border border-cyber-border rounded-xl p-4 w-full max-w-sm">
+        <div className="flex items-start gap-2 text-right">
+          <Shuffle size={14} className="text-cyber-cyan shrink-0 mt-0.5" />
+          <p className="text-xs text-cyber-muted leading-relaxed">
+            <span className="text-cyber-cyan font-medium">بنك أسئلة ضخم: </span>
+            50 سؤالاً مُختلفًا — يتم اختيار 15 منها بشكل عشوائي في كل مرة
+          </p>
+        </div>
       </div>
 
       <button
@@ -166,7 +199,9 @@ function DifficultyScreen({
         </button>
         <h2 className="text-2xl font-bold text-white">اختر مستوى الصعوبة</h2>
         <p className="text-cyber-muted text-sm">
-          كل مستوى يحتوي على أسئلة مختلفة تناسب مستوى معرفتك
+          سيتم اختيار{" "}
+          <span className="text-white font-semibold">{QUIZ_SIZE} أسئلة</span>{" "}
+          عشوائيًا من بنك الأسئلة الخاص بكل مستوى
         </p>
       </div>
 
@@ -183,7 +218,7 @@ function DifficultyScreen({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onSelect(level)}
-                className={`w-full text-right p-5 rounded-2xl border ${cfg.borderColor} ${cfg.bgColor} bg-opacity-10 transition-all duration-200 group cursor-pointer`}
+                className={`w-full text-right p-5 rounded-2xl border ${cfg.borderColor} ${cfg.bgColor} transition-all duration-200 group cursor-pointer`}
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
@@ -205,7 +240,7 @@ function DifficultyScreen({
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full border ${cfg.borderColor} ${cfg.color}`}
                     >
-                      {cfg.tag}
+                      {cfg.count} سؤالاً في البنك
                     </span>
                     <ChevronRight
                       size={18}
@@ -218,33 +253,29 @@ function DifficultyScreen({
           }
         )}
       </div>
-    </motion.div>
-  );
-}
 
-function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
-  const cfg = DIFFICULTY_CONFIG[difficulty];
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${cfg.borderColor} ${cfg.color} bg-transparent`}
-    >
-      {cfg.icon} {cfg.label}
-    </span>
+      <div className="flex items-center gap-2 text-xs text-cyber-muted bg-cyber-surface border border-cyber-border rounded-xl p-3">
+        <Shuffle size={14} className="text-cyber-cyan shrink-0" />
+        <span>
+          تتغير الأسئلة في كل جلسة — ستحصل على تجربة مختلفة في كل مرة
+        </span>
+      </div>
+    </motion.div>
   );
 }
 
 function QuizScreen({
   questionIndex,
-  filteredQuestions,
+  sessionQuestions,
   difficulty,
   onAnswer,
 }: {
   questionIndex: number;
-  filteredQuestions: typeof questions;
+  sessionQuestions: Question[];
   difficulty: Difficulty;
   onAnswer: (correct: boolean) => void;
 }) {
-  const q = filteredQuestions[questionIndex];
+  const q = sessionQuestions[questionIndex];
   const [selected, setSelected] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
 
@@ -272,7 +303,7 @@ function QuizScreen({
       transition={{ duration: 0.35 }}
       className="flex flex-col gap-6"
     >
-      <ProgressBar current={questionIndex} total={filteredQuestions.length} />
+      <ProgressBar current={questionIndex} total={sessionQuestions.length} />
 
       <div className="space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
@@ -351,7 +382,7 @@ function QuizScreen({
           onClick={() => onAnswer(isCorrect)}
           className="cyber-btn py-3.5 rounded-xl font-bold flex items-center justify-center gap-2"
         >
-          {questionIndex < filteredQuestions.length - 1 ? (
+          {questionIndex < sessionQuestions.length - 1 ? (
             <>
               <span>السؤال التالي</span>
               <ChevronRight size={18} className="rotate-180" />
@@ -443,7 +474,9 @@ function ResultScreen({
           <Trophy size={24} className="text-yellow-400" />
           <h2 className="text-2xl font-bold text-white">اكتملت النتائج</h2>
         </div>
-        <div className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full border ${cfg.borderColor} ${cfg.color}`}>
+        <div
+          className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full border ${cfg.borderColor} ${cfg.color}`}
+        >
           {cfg.icon} مستوى {cfg.label}
         </div>
         <p className={`font-semibold text-base mt-2 ${msg.color}`}>{msg.text}</p>
@@ -470,8 +503,8 @@ function ResultScreen({
           onClick={onRestart}
           className="cyber-btn w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2"
         >
-          <RotateCcw size={18} />
-          <span>إعادة نفس المستوى</span>
+          <Shuffle size={18} />
+          <span>جولة جديدة بأسئلة مختلفة</span>
         </button>
         <button
           onClick={onChangeDifficulty}
@@ -484,19 +517,20 @@ function ResultScreen({
   );
 }
 
+// ─── App ───────────────────────────────────────────────────────────────────
+
 export default function App() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [difficulty, setDifficulty] = useState<Difficulty>("beginner");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
+  const [sessionQuestions, setSessionQuestions] = useState<Question[]>([]);
 
-  const filteredQuestions = useMemo(
-    () => questions.filter((q) => q.difficulty === difficulty),
-    [difficulty]
-  );
-
-  const handleSelectDifficulty = (d: Difficulty) => {
+  const startQuiz = (d: Difficulty) => {
+    const pool = questions.filter((q) => q.difficulty === d);
+    const picked = pickRandom(pool, QUIZ_SIZE);
     setDifficulty(d);
+    setSessionQuestions(picked);
     setQuestionIndex(0);
     setScore(0);
     setPhase("quiz");
@@ -504,25 +538,13 @@ export default function App() {
 
   const handleAnswer = (correct: boolean) => {
     const newScore = correct ? score + 1 : score;
-    if (questionIndex < filteredQuestions.length - 1) {
+    if (questionIndex < sessionQuestions.length - 1) {
       setScore(newScore);
       setQuestionIndex((i) => i + 1);
     } else {
       setScore(newScore);
       setPhase("result");
     }
-  };
-
-  const handleRestart = () => {
-    setQuestionIndex(0);
-    setScore(0);
-    setPhase("quiz");
-  };
-
-  const handleChangeDifficulty = () => {
-    setQuestionIndex(0);
-    setScore(0);
-    setPhase("difficulty");
   };
 
   return (
@@ -538,7 +560,8 @@ export default function App() {
             <span
               className={`mr-auto text-xs px-2 py-0.5 rounded-full border ${DIFFICULTY_CONFIG[difficulty].borderColor} ${DIFFICULTY_CONFIG[difficulty].color}`}
             >
-              {DIFFICULTY_CONFIG[difficulty].icon} {DIFFICULTY_CONFIG[difficulty].label}
+              {DIFFICULTY_CONFIG[difficulty].icon}{" "}
+              {DIFFICULTY_CONFIG[difficulty].label}
             </span>
           )}
         </header>
@@ -547,20 +570,23 @@ export default function App() {
           <div className="w-full max-w-lg">
             <AnimatePresence mode="wait">
               {phase === "intro" && (
-                <IntroScreen key="intro" onNext={() => setPhase("difficulty")} />
+                <IntroScreen
+                  key="intro"
+                  onNext={() => setPhase("difficulty")}
+                />
               )}
               {phase === "difficulty" && (
                 <DifficultyScreen
                   key="difficulty"
-                  onSelect={handleSelectDifficulty}
+                  onSelect={startQuiz}
                   onBack={() => setPhase("intro")}
                 />
               )}
-              {phase === "quiz" && (
+              {phase === "quiz" && sessionQuestions.length > 0 && (
                 <QuizScreen
                   key={`quiz-${questionIndex}`}
                   questionIndex={questionIndex}
-                  filteredQuestions={filteredQuestions}
+                  sessionQuestions={sessionQuestions}
                   difficulty={difficulty}
                   onAnswer={handleAnswer}
                 />
@@ -569,10 +595,10 @@ export default function App() {
                 <ResultScreen
                   key="result"
                   score={score}
-                  total={filteredQuestions.length}
+                  total={sessionQuestions.length}
                   difficulty={difficulty}
-                  onRestart={handleRestart}
-                  onChangeDifficulty={handleChangeDifficulty}
+                  onRestart={() => startQuiz(difficulty)}
+                  onChangeDifficulty={() => setPhase("difficulty")}
                 />
               )}
             </AnimatePresence>
