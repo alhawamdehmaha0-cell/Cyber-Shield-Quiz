@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --font-arabic: 'Noto Kufi Arabic', sans-serif;
+}
+
+/* ─── Cybersecurity Dark Palette ─── */
+:root {
+  --background: 222 47% 6%;
+  --foreground: 210 40% 95%;
+  --border: 220 20% 14%;
+
+  /* Custom tokens */
+  --cyber-bg: #070d17;
+  --cyber-surface: #0e1623;
+  --cyber-border: #1a2540;
+  --cyber-green: #00d4aa;
+  --cyber-cyan: #38bdf8;
+  --cyber-red: #f87171;
+  --cyber-muted: #6b7fa3;
+}
+
+/* ─── Base ─── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Noto Kufi Arabic', sans-serif;
+  background-color: var(--cyber-bg);
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Grid overlay ─── */
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0, 212, 170, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 170, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 0;
+}
+
+/* ─── Utility classes ─── */
+.bg-cyber-bg       { background-color: var(--cyber-bg); }
+.bg-cyber-surface  { background-color: var(--cyber-surface); }
+.border-cyber-border { border-color: var(--cyber-border); }
+.text-cyber-green  { color: var(--cyber-green); }
+.text-cyber-cyan   { color: var(--cyber-cyan); }
+.text-cyber-red    { color: var(--cyber-red); }
+.text-cyber-muted  { color: var(--cyber-muted); }
+.font-arabic       { font-family: 'Noto Kufi Arabic', sans-serif; }
+
+/* ─── Cyber button ─── */
+.cyber-btn {
+  position: relative;
+  background: linear-gradient(135deg, #00d4aa, #0ea5e9);
+  color: #070d17;
+  font-weight: 700;
+  font-family: 'Noto Kufi Arabic', sans-serif;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  overflow: hidden;
+}
+
+.cyber-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background 0.2s;
+}
+
+.cyber-btn:hover::after { background: rgba(255,255,255,0.1); }
+.cyber-btn:active { transform: scale(0.98); }
+
+/* ─── Option buttons ─── */
+.option-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--cyber-surface);
+  border: 1px solid var(--cyber-border);
+  border-radius: 12px;
+  color: #e2e8f0;
+  font-family: 'Noto Kufi Arabic', sans-serif;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  text-align: right;
+  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+  direction: rtl;
+}
+
+.option-btn:hover:not(:disabled) {
+  border-color: rgba(0,212,170,0.4);
+  background: rgba(0,212,170,0.05);
+}
+
+.option-btn:active:not(:disabled) { transform: scale(0.99); }
+
+.option-btn.option-correct {
+  border-color: var(--cyber-green);
+  background: rgba(0,212,170,0.08);
+  color: #ffffff;
+  cursor: default;
+}
+
+.option-btn.option-wrong {
+  border-color: var(--cyber-red);
+  background: rgba(248,113,113,0.08);
+  color: #ffffff;
+  cursor: default;
+}
+
+.option-btn.option-dim {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ─── Option label badge ─── */
+.option-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--cyber-muted);
+  flex-shrink: 0;
+}
+
+.option-correct .option-label {
+  background: rgba(0,212,170,0.2);
+  border-color: rgba(0,212,170,0.4);
+  color: var(--cyber-green);
+}
+
+.option-wrong .option-label {
+  background: rgba(248,113,113,0.2);
+  border-color: rgba(248,113,113,0.4);
+  color: var(--cyber-red);
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cyber-bg); }
+::-webkit-scrollbar-thumb { background: var(--cyber-border); border-radius: 3px; }
